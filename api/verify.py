@@ -12,10 +12,14 @@ from instagrapi.exceptions import (
 )
 import random
 import os
-import sys
+import logging
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_android_device():
     """Generate realistic Android device settings"""
@@ -79,6 +83,8 @@ def check_instagram_login(username, password, verification_code=None):
         "requires_2fa": False
     }
 
+    cl = None
+    
     try:
         # Initialize Instagram client
         cl = Client()
@@ -103,6 +109,8 @@ def check_instagram_login(username, password, verification_code=None):
             cl.set_proxy(proxy_url)
 
         # Perform login
+        logger.info(f"Attempting login for user: {username}")
+        
         if verification_code:
             cl.login(username, password, verification_code=verification_code)
         else:
@@ -123,36 +131,53 @@ def check_instagram_login(username, password, verification_code=None):
             "follower_count": user_info.follower_count,
             "following_count": user_info.following_count
         }
+        
+        logger.info(f"Login successful for user: {username}")
 
     except BadPassword as e:
+        logger.warning(f"Bad password attempt for user: {username}")
         result["message"] = "Incorrect password"
 
     except UserNotFound as e:
+        logger.warning(f"User not found: {username}")
         result["message"] = "Username does not exist"
 
     except TwoFactorRequired as e:
+        logger.info(f"2FA required for user: {username}")
         result["requires_2fa"] = True
         result["message"] = "Two-factor authentication required"
 
     except ChallengeRequired as e:
+        logger.warning(f"Challenge required for user: {username}")
         result["message"] = "Instagram security challenge required. Verify via Instagram app"
 
     except PleaseWaitFewMinutes as e:
+        logger.warning(f"Rate limit hit for user: {username}")
         result["message"] = "Too many attempts. Please wait 5-10 minutes"
 
     except RateLimitError as e:
+        logger.warning(f"Rate limit error for user: {username}")
         result["message"] = "Rate limit exceeded. Try again later"
 
     except LoginRequired as e:
+        logger.error(f"Login failed for user: {username}")
         result["message"] = "Login failed. Please try again"
 
     except Exception as e:
-        result["message"] = f"Error: {str(e)}"
+        logger.error(f"Unexpected error for user {username}: {str(e)}")
+        result["message"] = f"Login error: {str(e)}"
+
+    finally:
+        # Clean up client
+        if cl:
+            try:
+                cl.logout()
+            except:
+                pass
 
     return result
 
 @app.route('/', methods=['GET'])
-@app.route('/api/verify', methods=['GET'])
 def index():
     """Root endpoint - health check"""
     return jsonify({
@@ -164,9 +189,18 @@ def index():
         }
     }), 200
 
-@app.route('/', methods=['POST', 'OPTIONS'])
+@app.route('/api/verify', methods=['GET'])
+def verify_get():
+    """GET endpoint - return instructions"""
+    return jsonify({
+        "error": "Method not allowed",
+        "message": "Use POST method to verify credentials",
+        "required_fields": ["username", "password"],
+        "optional_fields": ["verification_code"]
+    }), 405
+
 @app.route('/api/verify', methods=['POST', 'OPTIONS'])
-def verify():
+def verify_post():
     """Main verification endpoint"""
 
     # Handle CORS preflight
@@ -213,20 +247,16 @@ def verify():
 
         # Return response with proper status code
         status_code = 200 if result['success'] else 401
-        response = jsonify(result)
-        response.headers.add('Access-Control-Allow-Origin', '*')
-
-        return response, status_code
+        return jsonify(result), status_code
 
     except Exception as e:
         # Catch any unexpected errors
-        error_response = jsonify({
+        logger.error(f"Server error: {str(e)}")
+        return jsonify({
             "success": False,
             "error": f"Server error: {str(e)}",
             "message": "An unexpected error occurred"
-        })
-        error_response.headers.add('Access-Control-Allow-Origin', '*')
-        return error_response, 500
+        }), 500
 
 @app.errorhandler(404)
 def not_found(e):
@@ -236,10 +266,30 @@ def not_found(e):
         "message": "Use POST /api/verify to check credentials"
     }), 404
 
+@app.errorhandler(405)
+def method_not_allowed(e):
+    """Handle 405 errors"""
+    return jsonify({
+        "error": "Method not allowed",
+        "message": "Check the endpoint documentation for allowed methods"
+    }), 405
+
 @app.errorhandler(500)
 def internal_error(e):
     """Handle 500 errors"""
+    logger.error(f"Internal server error: {str(e)}")
     return jsonify({
+        "error": "Internal server error",
+        "message": "An unexpected error occurred"
+    }), 500
+
+# Catch-all error handler
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Handle any uncaught exceptions"""
+    logger.error(f"Uncaught exception: {str(e)}")
+    return jsonify({
+        "success": False,
         "error": "Internal server error",
         "message": str(e)
     }), 500
